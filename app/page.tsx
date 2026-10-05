@@ -10,8 +10,17 @@ const GOALS = [
   { id: "career", label: "Job Hunt", emoji: "📄" },
 ];
 
+const STATES = [
+  "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue",
+  "Borno", "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu",
+  "FCT Abuja", "Gombe", "Imo", "Jigawa", "Kaduna", "Kano", "Katsina",
+  "Kebbi", "Kogi", "Kwara", "Lagos", "Nasarawa", "Niger", "Ogun", "Ondo",
+  "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara",
+];
+
 export default function Home() {
   const [goal, setGoal] = useState<string | null>(null);
+  const [city, setCity] = useState("");
 
   return (
     <main className="min-h-screen bg-yellow-50 p-6 flex flex-col items-center">
@@ -35,10 +44,25 @@ export default function Home() {
         ))}
       </div>
 
+      <p className="text-gray-600 mt-8 mb-3">Which state are you repping?</p>
+      <select
+        value={city}
+        onChange={(e) => setCity(e.target.value)}
+        className="w-full max-w-md p-3 rounded-2xl border-2 border-gray-300 bg-white font-semibold"
+      >
+        <option value="">Choose your state</option>
+        {STATES.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
+      </select>
+
       <button
-        disabled={!goal}
+        disabled={!goal || !city}
         onClick={() => {
           localStorage.setItem("goal", goal!);
+          localStorage.setItem("city", city);
           window.location.href = "/game";
         }}
         className="mt-8 w-full max-w-md py-3 rounded-2xl bg-green-600 text-white font-bold disabled:opacity-40"
