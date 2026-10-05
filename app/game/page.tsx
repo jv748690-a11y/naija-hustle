@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 
+type Ev = { text: string; money: number; hours: number };
+
 const ACTIONS = [
   { label: "Work your job", hours: 4, money: 3000 },
   { label: "Side hustle", hours: 2, money: 1500 },
@@ -8,7 +10,7 @@ const ACTIONS = [
   { label: "Hang with friends", hours: 2, money: -1000 },
 ];
 
-const EVENTS = [
+const EVENTS: Ev[] = [
   { text: "NEPA took light. You bought fuel for the generator.", money: -1000, hours: 0 },
   { text: "Fuel scarcity! Transport cost you extra.", money: -1500, hours: 0 },
   { text: "Heavy rain flooded the road. You lost 2 hours.", money: 0, hours: -2 },
@@ -16,8 +18,28 @@ const EVENTS = [
   { text: "Police checkpoint. You settled small to move on.", money: -500, hours: 0 },
 ];
 
+const STATE_EVENTS: Record<string, Ev[]> = {
+  Lagos: [
+    { text: "Third Mainland Bridge traffic ate 3 hours of your day.", money: 0, hours: -3 },
+    { text: "Danfo conductor said no change, so you lost small money.", money: -300, hours: 0 },
+  ],
+  "FCT Abuja": [
+    { text: "Abuja taxi fare doubled after the rain.", money: -1200, hours: 0 },
+    { text: "A Wuse 2 client paid you well for a quick job.", money: 3000, hours: 0 },
+  ],
+  Rivers: [
+    { text: "Port Harcourt flood blocked your route. You lost 2 hours.", money: 0, hours: -2 },
+    { text: "Your PH plug hooked you up with a good deal.", money: 2000, hours: 0 },
+  ],
+  Kano: [
+    { text: "Kano market day brought plenty customers to you.", money: 2500, hours: 0 },
+    { text: "Harmattan dust slowed everything down. You lost 1 hour.", money: 0, hours: -1 },
+  ],
+};
+
 export default function Game() {
   const [goal, setGoal] = useState("");
+  const [city, setCity] = useState("");
   const [day, setDay] = useState(1);
   const [balance, setBalance] = useState(20000);
   const [hours, setHours] = useState(8);
@@ -28,6 +50,7 @@ export default function Game() {
 
   useEffect(() => {
     setGoal(localStorage.getItem("goal") || "");
+    setCity(localStorage.getItem("city") || "");
   }, []);
 
   function act(a: (typeof ACTIONS)[number]) {
@@ -42,7 +65,8 @@ export default function Game() {
     let text = "Transport and bills took ₦1,500.";
 
     if (Math.random() < 0.7) {
-      const ev = EVENTS[Math.floor(Math.random() * EVENTS.length)];
+      const pool = [...EVENTS, ...(STATE_EVENTS[city] || [])];
+      const ev = pool[Math.floor(Math.random() * pool.length)];
       newBalance += ev.money;
       newHours += ev.hours;
       text += " " + ev.text;
@@ -69,7 +93,7 @@ export default function Game() {
 
   function cardMessage() {
     if (!card) return "";
-    return `Naija Hustle, Day ${card.day}: ${card.text} I have ₦${card.balance.toLocaleString()} left. Still hustling!`;
+    return `Naija Hustle (${city}), Day ${card.day}: ${card.text} I have ₦${card.balance.toLocaleString()} left. Still hustling!`;
   }
 
   async function shareText(message: string) {
@@ -96,12 +120,12 @@ export default function Game() {
       <main className="min-h-screen bg-red-50 p-6 flex flex-col items-center justify-center">
         <h1 className="text-3xl font-bold text-red-700">You are broke!</h1>
         <p className="mt-2 text-gray-700 text-center">
-          You lasted {day - 1} {day - 1 === 1 ? "day" : "days"} in Naija.
+          You lasted {day - 1} {day - 1 === 1 ? "day" : "days"} in {city}.
         </p>
         <p className="mt-1 text-gray-500 text-center">{msg}</p>
         <button
           onClick={() =>
-            shareText(`I went broke on Day ${day - 1} in Naija Hustle. Can you last longer than me?`)
+            shareText(`I went broke on Day ${day - 1} in Naija Hustle (${city}). Can you last longer than me?`)
           }
           className="mt-6 w-full max-w-md py-3 rounded-2xl bg-white border-2 border-red-300 text-red-700 font-bold"
         >
@@ -120,7 +144,9 @@ export default function Game() {
   return (
     <main className="min-h-screen bg-yellow-50 p-6 flex flex-col items-center">
       <h1 className="text-2xl font-bold mt-8">Day {day}</h1>
-      <p className="text-gray-600">Path: {goal}</p>
+      <p className="text-gray-600 capitalize">
+        {city} | {goal}
+      </p>
 
       <div className="mt-6 p-6 rounded-2xl bg-white border-2 border-gray-300 w-full max-w-md text-center">
         <p className="text-gray-500">Your balance</p>
@@ -153,7 +179,7 @@ export default function Game() {
 
       {card && (
         <div className="mt-6 w-full max-w-md rounded-2xl bg-green-700 text-white p-5">
-          <p className="text-sm opacity-80">Naija Hustle</p>
+          <p className="text-sm opacity-80">Naija Hustle | {city}</p>
           <p className="text-xl font-bold mt-1">Day {card.day}</p>
           <p className="mt-2">{card.text}</p>
           <p className="mt-3 text-2xl font-bold">₦{card.balance.toLocaleString()} left</p>
