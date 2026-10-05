@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { Avatar, AvatarData, DEFAULT_AVATAR } from "../Avatar";
 
 type Ev = { text: string; money: number; hours: number };
 
@@ -37,9 +38,26 @@ const STATE_EVENTS: Record<string, Ev[]> = {
   ],
 };
 
+function Player({ mode, photo, avatar, size }: { mode: string; photo: string; avatar: AvatarData; size: number }) {
+  if (mode === "photo" && photo) {
+    return (
+      <img
+        src={photo}
+        alt="You"
+        style={{ width: size * 0.7, height: size * 0.7 }}
+        className="rounded-full object-cover border-4 border-green-600"
+      />
+    );
+  }
+  return <Avatar a={avatar} size={size} />;
+}
+
 export default function Game() {
   const [goal, setGoal] = useState("");
   const [city, setCity] = useState("");
+  const [mode, setMode] = useState("avatar");
+  const [photo, setPhoto] = useState("");
+  const [avatar, setAvatar] = useState<AvatarData>(DEFAULT_AVATAR);
   const [day, setDay] = useState(1);
   const [balance, setBalance] = useState(20000);
   const [hours, setHours] = useState(8);
@@ -51,6 +69,12 @@ export default function Game() {
   useEffect(() => {
     setGoal(localStorage.getItem("goal") || "");
     setCity(localStorage.getItem("city") || "");
+    setMode(localStorage.getItem("avatarMode") || "avatar");
+    setPhoto(localStorage.getItem("photo") || "");
+    try {
+      const saved = localStorage.getItem("avatar");
+      if (saved) setAvatar({ ...DEFAULT_AVATAR, ...JSON.parse(saved) });
+    } catch {}
   }, []);
 
   function act(a: (typeof ACTIONS)[number]) {
@@ -148,10 +172,15 @@ export default function Game() {
         {city} | {goal}
       </p>
 
-      <div className="mt-6 p-6 rounded-2xl bg-white border-2 border-gray-300 w-full max-w-md text-center">
-        <p className="text-gray-500">Your balance</p>
-        <p className="text-4xl font-bold text-green-600">₦{balance.toLocaleString()}</p>
-        <p className="text-gray-500 mt-2">Hours left today: {hours}</p>
+      <div className="mt-6 p-4 rounded-2xl bg-white border-2 border-gray-300 w-full max-w-md flex items-center gap-4">
+        <div className="shrink-0 flex items-center justify-center" style={{ width: 80 }}>
+          <Player mode={mode} photo={photo} avatar={avatar} size={130} />
+        </div>
+        <div className="flex-1 text-center">
+          <p className="text-gray-500">Your balance</p>
+          <p className="text-4xl font-bold text-green-600">₦{balance.toLocaleString()}</p>
+          <p className="text-gray-500 mt-2">Hours left today: {hours}</p>
+        </div>
       </div>
 
       <p className="mt-4 text-center text-gray-700">{msg}</p>
@@ -179,9 +208,16 @@ export default function Game() {
 
       {card && (
         <div className="mt-6 w-full max-w-md rounded-2xl bg-green-700 text-white p-5">
-          <p className="text-sm opacity-80">Naija Hustle | {city}</p>
-          <p className="text-xl font-bold mt-1">Day {card.day}</p>
-          <p className="mt-2">{card.text}</p>
+          <div className="flex items-center gap-3">
+            <div className="shrink-0 flex items-center justify-center" style={{ width: 56 }}>
+              <Player mode={mode} photo={photo} avatar={avatar} size={90} />
+            </div>
+            <div>
+              <p className="text-sm opacity-80">Naija Hustle | {city}</p>
+              <p className="text-xl font-bold">Day {card.day}</p>
+            </div>
+          </div>
+          <p className="mt-3">{card.text}</p>
           <p className="mt-3 text-2xl font-bold">₦{card.balance.toLocaleString()} left</p>
           <div className="mt-4 grid grid-cols-3 gap-2">
             <button
